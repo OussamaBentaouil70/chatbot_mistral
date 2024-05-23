@@ -189,7 +189,7 @@ def chatbot_view(request):
         return redirect('login')
     # Retrieve the token from the session
     token = request.session['token']
-    
+    print("Token in chatbot_view:", token)
 
     form = ChatbotForm()
     messages = request.session.get('messages', [])
