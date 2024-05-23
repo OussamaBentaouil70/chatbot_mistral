@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.http import JsonResponse
 # prevent unauthorized POST requests from malicious websites.
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +10,9 @@ import json
 import re
 
 from rest_framework.views import APIView
+
+from mistral.forms import ChatbotForm, LoginForm
+from mlmistral.settings import SECRET_KEY
 from .serializers import UserSerializer
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
@@ -31,7 +34,9 @@ def token_required(f):
         try:
             if token.startswith('Bearer '):
                 token = token.split(' ')[1]
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+                 # Print the token after extracting the actual JWT
+            print("Token after split:", token)
+            payload = jwt.decode(token, SECRET_KEY , algorithms=['HS256'])
             request.user_id = payload['id']
         except jwt.ExpiredSignatureError:
             return JsonResponse({'error': 'Token has expired!'}, status=403)
@@ -50,7 +55,7 @@ class Register(APIView):
         return Response(serializer.data)
 
 
-# User Authentication
+
 class Login(APIView):
     def post(self, request):
         email = request.data['email']
@@ -76,7 +81,7 @@ class Login(APIView):
         # secret : secret key for encoding the token
         # The hashing algorithm used to generate the signature for the token
         # decode : used to convert token to a string
-        token = jwt.encode(payload, 'secret', algorithm='HS256')
+        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
         
         # create a response object
         response = Response()
@@ -86,6 +91,37 @@ class Login(APIView):
         response.data = {'token': token}
         
         return response
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            user = User.objects.filter(email=email).first()
+            if user is None or not user.check_password(password):
+                return render(request, 'login.html', {'form': form, 'error': 'Invalid email or password'})
+            
+            payload = {
+                'id': user.id,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+                'iat': datetime.datetime.utcnow()
+            }
+            token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+            request.session['token'] = token
+            # Print the token to the console
+            print("Generated Token:", token)
+            response = Response()
+            response.set_cookie(key='token', value=token, httponly=True)
+            response.data = {'token': token}
+            
+            return redirect('chatbot')
+     
+            
+    else:
+        form = LoginForm()
+    return render(request, 'login.html', {'form': form})
+
     
 # Define the URL of the Mistral API
 OLLAMA_MISTRAL_API_URL = "http://localhost:11434/api/generate"
@@ -135,7 +171,7 @@ def generate_text(request):
                     combined_response += response_data['response'] + ' '
             # Transform the combined response text
             transformed_response = transform_text(combined_response)
-            print('after transformed : ' + transformed_response)
+            
             # Return the transformed response as JSON
             return JsonResponse({'response': transformed_response.strip()}, status=200)
 
@@ -149,4 +185,21 @@ def generate_text(request):
     
 
 def chatbot_view(request):
-    return render(request, 'chatbot.html')
+    if 'token' not in request.session:
+        return redirect('login')
+    # Retrieve the token from the session
+    token = request.session['token']
+    
+
+    form = ChatbotForm()
+    messages = request.session.get('messages', [])
+    return render(request, 'chatbot.html', {'form': form, 'messages': messages, 'token': token})
+
+
+def logout_view(request):
+    # Clear the token from the session
+    if 'token' in request.session:
+        del request.session['token']
+    
+    # Redirect to the login page
+    return redirect('login')
