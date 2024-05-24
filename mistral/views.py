@@ -102,24 +102,26 @@ def login_view(request):
             if user is None or not user.check_password(password):
                 return render(request, 'login.html', {'form': form, 'error': 'Invalid email or password'})
             
+            user_info = {
+                'id': user.id,
+                'email': user.email,
+            }
+
             payload = {
+                'user': user_info,
                 'id': user.id,
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
                 'iat': datetime.datetime.utcnow()
             }
             token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-            request.session['token'] = token
-            # Print the token to the console
-            print("Generated Token:", token)
-            response = Response()
-            response.set_cookie(key='token', value=token, httponly=True)
-            response.data = {'token': token}
             
-            return redirect('chatbot')
-     
+            # Storing token in session and sending it as a JSON response
+            request.session['token'] = token
+            return JsonResponse({'token': token})
             
     else:
         form = LoginForm()
+        
     return render(request, 'login.html', {'form': form})
 
     
@@ -190,7 +192,7 @@ def chatbot_view(request):
     # Retrieve the token from the session
     token = request.session['token']
     print("Token in chatbot_view:", token)
-
+    payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
     form = ChatbotForm()
     messages = request.session.get('messages', [])
     return render(request, 'chatbot.html', {'form': form, 'messages': messages, 'token': token})

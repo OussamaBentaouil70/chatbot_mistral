@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chatbot Interface</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.7/dist/tailwind.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
     <style>
         .chatbot-card {
             width: 100%;
@@ -44,40 +45,308 @@
             background-color: #edf2f7;
             color: #4a5568;
         }
+        .loading-icon {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .user-initial {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col justify-end">
-   <!-- Logout button form -->
-   <form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg">Logout</button>
-</form>
+
+<nav class="bg-gray-800">
+    <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+      <div class="relative flex h-16 items-center justify-between">
+        <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
+          <!-- Mobile menu button-->
+          <button type="button" class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+            <span class="absolute -inset-0.5"></span>
+            <span class="sr-only">Open main menu</span>
+            <!--
+              Icon when menu is closed.
+  
+              Menu open: "hidden", Menu closed: "block"
+            -->
+            <svg class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+            <!--
+              Icon when menu is open.
+  
+              Menu open: "block", Menu closed: "hidden"
+            -->
+            <svg class="hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+          <div class="flex flex-shrink-0 items-center">
+            <img class="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500" alt="Your Company">
+          </div>
+          <div class="hidden sm:ml-6 sm:block">
+           
+          </div>
+        </div>
+        <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+       
+  
+          <!-- Profile dropdown -->
+          <div class="relative ml-3">
+            <div>
+              <button type="button" class="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                <span class="absolute -inset-1.5"></span>
+                <span class="sr-only">Open user menu</span>
+                <div id="user-icon" class="user-initial bg-gray-500"></div>
+                          </button>
+            </div>
+  
+         
+            <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+             
+            
+                <form id="logout-form" method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="block px-4 py-2 text-sm text-gray-700  ">Logout</button>
+                </form>
+           
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Mobile menu, show/hide based on menu state. -->
+    <div class="sm:hidden" id="mobile-menu">
+      <div class="space-y-1 px-2 pb-3 pt-2">
+        <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+        <a href="#" class="bg-gray-900 text-white block rounded-md px-3 py-2 text-base font-medium" aria-current="page">Dashboard</a>
+        <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Team</a>
+        <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Projects</a>
+        <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Calendar</a>
+      </div>
+    </div>
+  </nav>
+  
 
     <div class="flex justify-center items-center h-full">
         <div class="bg-white rounded-lg shadow-lg p-4 chatbot-card">
             <div class="flex items-center justify-between mb-4">
-                <img src="https://source.unsplash.com/50x50/?robot" alt="Bot Icon" class="w-8 h-8 rounded-full" />
+               
                 <h2 class="text-lg font-semibold text-gray-800">Chatbot</h2>
-                <img src="https://source.unsplash.com/50x50/?person" alt="User Icon" class="w-8 h-8 rounded-full" />
+              
             </div>
-            <div class="bg-gray-200 p-4 rounded-lg mb-4 messages-container">
+            <div id="messages-container" class="bg-gray-200 p-4 rounded-lg mb-4 messages-container">
                 {% for message in messages %}
                     <div class="message {{ message.type }}">
-                        <img src="https://source.unsplash.com/50x50/?{{ message.type }}" alt="{{ message.type }} Icon" class="w-8 h-8 rounded-full icon" />
+                       {% if message.type == 'bot' %}
+                            <img src="https://miro.medium.com/v2/resize:fit:1400/1*ChXf6m80xpdTqpEL1xu5qg.jpeg" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
+                        {% else %}
+                            <img src="https://source.unsplash.com/50x50/?person" alt="User Icon" class="w-8 h-8 rounded-full icon" />
+                        {% endif %}
                         <div class="text">{{ message.text }}</div>
+              
                     </div>
-                {% endfor %}  
+                {% endfor %}
             </div>
-            <form method="post" class="flex items-center">
+            <form id="chat-form" method="post" class="flex items-center w-full">
                 {% csrf_token %}
-                {{ form.prompt }}
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 1.5rem; height: 1.5rem;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                    </svg>
+                <textarea id="prompt" name="prompt" class="w-full p-2 border rounded-lg" placeholder="Enter your message here"></textarea>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg ml-2">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
             </form>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    <script>
+        function getUserInitial(email) {
+            return email ? email.charAt(0).toUpperCase() : '';
+        }
+
+        function getRandomColor() {
+            const colors = ['bg-red-500', 'bg-green-500', 'bg-blue-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = '{{ token }}';
+            try {
+                const decodedToken = jwt_decode(token);
+                console.log('Decoded token:', decodedToken);
+                const userEmail = decodedToken.user.email;
+                if (!userEmail) throw new Error('Email not found in token');
+                const userInitial = getUserInitial(userEmail);
+                const userIcon = document.getElementById('user-icon');
+                userIcon.textContent = userInitial;
+                userIcon.classList.add(getRandomColor());
+            } catch (error) {
+                console.error('Error decoding token or setting user initial:', error);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login'; // Redirect to login page if token is not found
+            }
+        
+            try {
+                const decodedToken = jwt_decode(token);
+                const userEmail = decodedToken.user.email;
+                if (!userEmail) throw new Error('Email not found in token');
+                const userInitial = getUserInitial(userEmail);
+                const userIcon = document.getElementById('user-icon');
+                userIcon.textContent = userInitial;
+                userIcon.classList.add(getRandomColor());
+            } catch (error) {
+                console.error('Error decoding token or setting user initial:', error);
+            }
+        
+            const messages = getMessagesFromLocalStorage();
+            displayMessages(messages);
+        });
+// Function to save messages to local storage
+function saveMessagesToLocalStorage(messages) {
+    localStorage.setItem('messages', JSON.stringify(messages));
+}
+
+// Function to retrieve messages from local storage
+function getMessagesFromLocalStorage() {
+    const messagesJSON = localStorage.getItem('messages');
+    return messagesJSON ? JSON.parse(messagesJSON) : [];
+}
+
+// Function to update messages container and save messages to local storage
+function updateMessagesContainer(messageHTML) {
+    const messagesContainer = document.getElementById('messages-container');
+    messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+    
+    // Retrieve and update messages from local storage
+    const messages = getMessagesFromLocalStorage();
+    messages.push(messageHTML);
+    saveMessagesToLocalStorage(messages);
+}
+
+
+        document.getElementById('chat-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const promptInput = document.getElementById('prompt');
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            const messagesContainer = document.getElementById('messages-container');
+            // Decode the token to extract user information
+            const token = '{{ token }}';  // Make sure to pass the token to your template
+            const decodedToken = jwt_decode(token);
+            const user_email = decodedToken.user.email;
+            // Display user message
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.classList.add('message', 'user');
+            userMessageDiv.innerHTML = `
+            <div class="user-initial ${getRandomColor()}">${getUserInitial(`${user_email}`)}</div>
+            <div class="text">${prompt}</div>
+        `;
+            messagesContainer.appendChild(userMessageDiv);
+
+            // Clear the input
+            promptInput.value = '';
+            
+            // Display loading message
+            const loadingMessageDiv = document.createElement('div');
+            loadingMessageDiv.classList.add('message', 'bot');
+            loadingMessageDiv.innerHTML = `
+                <img src="https://source.unsplash.com/50x50/?ai" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
+                <div class="text"><i class="fas fa-spinner fa-spin"></i></div>
+            `;
+            messagesContainer.appendChild(loadingMessageDiv);
+
+            try {
+                // Send the message to the server
+                const response = await fetch('{% url "generate_text" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${'{{ token }}'}`
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+
+                // Remove the loading message
+                messagesContainer.removeChild(loadingMessageDiv);
+
+                // Display bot response
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.classList.add('message', 'bot');
+                botMessageDiv.innerHTML = `
+                    <img src="https://source.unsplash.com/50x50/?ai" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
+                    <div class="text" style="color: black" >${data.response}</div>
+                `;
+                messagesContainer.appendChild(botMessageDiv);
+                 // Update messages container with bot response and save to local storage
+        updateMessagesContainer(botMessageHTML);
+            } catch (error) {
+                // Remove the loading message
+                messagesContainer.removeChild(loadingMessageDiv);
+
+                // Display error message
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.classList.add('message', 'bot');
+                errorMessageDiv.innerHTML = `
+                    <img src="https://source.unsplash.com/50x50/?ai" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
+                    <div class="text">Error: ${error.message}</div>
+                `;
+                messagesContainer.appendChild(errorMessageDiv);
+            }
+        });
+        
+
+// Function to check token state
+function checkTokenState() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/api/login/'; // Redirect to login page
+    }
+}
+
+// Function to handle logout
+function logout() {
+    localStorage.removeItem('token'); // Remove token from local storage
+    localStorage.removeItem('messages'); // Remove messages from local storage
+    window.location.href = '/api/login/'; // Redirect to login page
+}
+
+// Event listener for logout button click
+document.getElementById('logout-button').addEventListener('click', logout);
+
+// Check token state when the page loads
+checkTokenState();
+
+// Retrieve messages from local storage
+const messages = getMessagesFromLocalStorage();
+
+    </script>
 </body>
 </html>
