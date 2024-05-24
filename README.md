@@ -11,7 +11,7 @@ The Chatbot Interface is a web application that allows users to interact with a 
 ## Features
 
 - **User Authentication**: Users must log in to access the chatbot interface. Authentication is handled using Django sessions and JWT tokens.
-- **Chatbot Interaction**: Users can input messages into the chat interface, and the chatbot generates responses based on the input using machine learning models.
+- **Chatbot Interaction**: Users can input messages into the chat interface, and the chatbot generates responses based on the input using machine learning models(mistral_api).
 - **Real-time Messaging**: Messages are displayed in real-time, providing a seamless conversational experience.
 - **Persistent Storage**: Messages are stored locally using browser localStorage, allowing users to access previous chat history even after refreshing the page.
 - **Responsive Design**: The interface is designed to be responsive, ensuring optimal viewing and interaction across various devices and screen sizes.
