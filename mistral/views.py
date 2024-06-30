@@ -20,8 +20,46 @@ from .models import User
 import jwt,datetime
 from functools import wraps
 from django.utils.decorators import method_decorator
+import os
+import google.generativeai as genai
 
+# Set the API key for the Generative AI service
+API_KEY = "AIzaSyD6ucne67qX_0nQrk_1psYD89ebok2bFXs"
+genai.configure(api_key=API_KEY)
 
+@csrf_exempt
+def generate_text_google(request):
+    if request.method == 'POST':
+        try:
+            # Parse the JSON data from the request body
+            data = json.loads(request.body.decode('utf-8'))
+            prompt = data.get('prompt')
+            
+            # Check if 'prompt' is missing in the request
+            if not prompt:
+                return JsonResponse({'error': 'Missing prompt'}, status=400)
+
+            # Initialize the GenerativeModel
+            model = genai.GenerativeModel('gemini-1.5-flash')
+
+            # Generate content based on the prompt
+            response = model.generate_content(prompt)
+
+            # Prepare the response in JSON format
+            response_json = {
+                'prompt': prompt,
+                'response': response.text
+            }
+
+            # Return the response as JSON
+            return JsonResponse(response_json, status=200)
+
+        except Exception as e:
+            # Return an error response if an exception occurs
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        # Return an error response for non-POST requests
+        return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
 
 def token_required(f):

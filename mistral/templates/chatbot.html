@@ -276,14 +276,14 @@ function updateMessagesContainer(messageHTML) {
             const loadingMessageDiv = document.createElement('div');
             loadingMessageDiv.classList.add('message', 'bot');
             loadingMessageDiv.innerHTML = `
-                <img src="https://source.unsplash.com/50x50/?ai" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
                 <div class="text"><i class="fas fa-spinner fa-spin"></i></div>
             `;
             messagesContainer.appendChild(loadingMessageDiv);
 
             try {
                 // Send the message to the server
-                const response = await fetch('{% url "generate_text" %}', {
+                const response = await fetch('{% url "generate_text_google" %}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -301,7 +301,7 @@ function updateMessagesContainer(messageHTML) {
                 const botMessageDiv = document.createElement('div');
                 botMessageDiv.classList.add('message', 'bot');
                 botMessageDiv.innerHTML = `
-                    <img src="https://source.unsplash.com/50x50/?ai" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
+                    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
                     <div class="text" style="color: black" >${data.response}</div>
                 `;
                 messagesContainer.appendChild(botMessageDiv);
@@ -315,7 +315,7 @@ function updateMessagesContainer(messageHTML) {
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.classList.add('message', 'bot');
                 errorMessageDiv.innerHTML = `
-                    <img src="https://source.unsplash.com/50x50/?ai" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
+                    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Bot Icon" class="w-8 h-8 rounded-full icon" />
                     <div class="text">Error: ${error.message}</div>
                 `;
                 messagesContainer.appendChild(errorMessageDiv);
